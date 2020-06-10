@@ -1,0 +1,12 @@
+C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\bin\Debug\NHL_Stenden_Weather.exe.config
+C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\bin\Debug\NHL_Stenden_Weather.exe
+C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\bin\Debug\NHL_Stenden_Weather.pdb
+C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\obj\Debug\NHL_Stenden_Weather.csprojAssemblyReference.cache
+C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\obj\Debug\NHL_Stenden_Weather.MainForm.resources
+C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\obj\Debug\NHL_Stenden_Weather.Properties.Resources.resources
+C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\obj\Debug\NHL_Stenden_Weather.csproj.GenerateResource.cache
+C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\obj\Debug\NHL_Stenden_Weather.csproj.CoreCompileInputs.cache
+C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\obj\Debug\NHL_Stenden_Weather.exe
+C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\obj\Debug\NHL_Stenden_Weather.pdb
+C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\obj\Debug\NHL_Stenden_Weather.splashScreen.resources
+C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\obj\Debug\NHL_Stenden_Weather.about.resources
