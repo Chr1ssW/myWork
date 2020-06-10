@@ -107,7 +107,8 @@ namespace NHL_Stenden_Weather
             string location;
             double temperature;
             string temperatureString;
-            string wind;
+            double wind;
+            string windString;
             string humidity;
             string units;
             string iconCode;
@@ -139,20 +140,20 @@ namespace NHL_Stenden_Weather
             location = doc.Root.Element("city").Attribute("name").Value + ", " +(string)doc.Descendants("country").FirstOrDefault();
             double.TryParse(doc.Root.Element("temperature").Attribute("value").Value, out temperature);
             iconCode = doc.Root.Element("weather").Attribute("icon").Value;
-            wind = "10";
+            double.TryParse(doc.Root.Element("wind").Element("speed").Attribute("value").Value, out wind);
             humidity = doc.Root.Element("humidity").Attribute("value").Value + "%";
             
 
             if (unit == 'F')
             {
                 temperatureString = temperature + " F";
-                wind = wind + " MPH";
+                windString = wind + " MPH";
             }
             else
             {
-                temperature = temperature * 3.6;
+                wind = wind * 3.6;
                 temperatureString = temperature + " °C";
-                wind = wind + " Km/h";
+                windString = wind + " Km/h";
             }
 
             //Loading the icon
@@ -167,7 +168,7 @@ namespace NHL_Stenden_Weather
             txtLocation.Text = location;
             txtTemp.Text = temperatureString;
             txtHumid.Text = humidity;
-            txtWind.Text = wind;
+            txtWind.Text = windString;
             picWeather.Image = icon;
 
             txtUpdate.Text = "Last updated:" + DateTime.Now.ToString("HH:mm:ss");
