@@ -12,6 +12,7 @@ using System.Xml.Linq;
 using System.IO;
 using System.Net;
 using System.ComponentModel.Design.Serialization;
+using System.Data.SqlClient;
 
 namespace NHL_Stenden_Weather
 {
@@ -99,8 +100,11 @@ namespace NHL_Stenden_Weather
             Application.Exit();
         }
 
+
+        //Method for the API
         private void refreshApi()
         {
+            //Variables used
             string city;
 
             string weatherDesc;
@@ -171,6 +175,7 @@ namespace NHL_Stenden_Weather
             txtWind.Text = windString;
             picWeather.Image = icon;
 
+            updateDatabase(temperature, location, unit);
             txtUpdate.Text = "Last updated:" + DateTime.Now.ToString("HH:mm:ss");
         }
 
@@ -224,6 +229,22 @@ namespace NHL_Stenden_Weather
 
             refreshApi();
             tabControl1.SelectedTab = tabPage1;
+        }
+        /// <summary>
+        /// Inserting data into the database
+        /// </summary>
+        /// <param name="temp">The temperature to be saved</param>
+        /// <param name="city">The city where the data was measured</param>
+        /// <param name="unit">Farenheit (F) or degree celsius (C)</param>
+        private void updateDatabase(double temp, string city, char unit)
+        {
+            SqlConnection con = new SqlConnection(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\Database1.mdf;Integrated Security=True");
+            con.Open();
+            SqlCommand com = new SqlCommand("insert into weather(day, temperature, city, unitOfMeasure) values('" + DateTime.Now + "', '" + temp + "', '" + city + "', '" + unit + "')", con);
+
+            com.ExecuteNonQuery();
+
+            con.Close();
         }
     }
 }
