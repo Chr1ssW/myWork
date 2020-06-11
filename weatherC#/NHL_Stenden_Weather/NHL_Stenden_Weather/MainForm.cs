@@ -18,6 +18,8 @@ namespace NHL_Stenden_Weather
 {
     public partial class MainForm : Form
     {
+        private System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
+
         public MainForm()
         {
             //Thread for splash-screen
@@ -43,7 +45,6 @@ namespace NHL_Stenden_Weather
         {
             Application.Run(new splashScreen());
         }
-
 
         //Closing the form event handler
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -74,7 +75,7 @@ namespace NHL_Stenden_Weather
         //Refresh application
         private void refreshToolStripMenuItem_Clicked(object sender, EventArgs e)
         {
-            //refreshApi();
+            refreshApi();
         }
 
         //Open options
@@ -100,83 +101,92 @@ namespace NHL_Stenden_Weather
             Application.Exit();
         }
 
-
         //Method for the API
         private void refreshApi()
         {
-            //Variables used
-            string city;
-
-            string weatherDesc;
-            string location;
-            double temperature;
-            string temperatureString;
-            double wind;
-            string windString;
-            string humidity;
-            string units;
-            string iconCode;
-            char unit;
-
-            city = inputCity.Text;
-
-            if (String.IsNullOrEmpty(inputCity.Text))
+            try
             {
-                city = "Emmen";
-            }
+                //Variables used
+                string city;
 
-            if (radioButton1.Checked)
+                string weatherDesc;
+                string location;
+                double temperature;
+                string temperatureString;
+                double wind;
+                string windString;
+                string humidity;
+                string units;
+                string iconCode;
+                char unit;
+
+                city = inputCity.Text;
+
+                if (String.IsNullOrEmpty(inputCity.Text))
+                {
+                    city = "Emmen";
+                }
+
+                if (radioButton1.Checked)
+                {
+                    units = "imperial";
+                    unit = 'F';
+                }
+                else
+                {
+                    units = "metric";
+                    unit = 'C';
+                }
+
+                string url = "http://api.openweathermap.org/data/2.5/weather?mode=xml&appid=ead3a55304596268baa5c68bb1afdfc6&q=" + city + "&units=" + units;
+
+                XDocument doc = XDocument.Load(url);
+
+                //Loading information from the API
+                weatherDesc = doc.Root.Element("weather").Attribute("value").Value;
+                location = doc.Root.Element("city").Attribute("name").Value + ", " + (string)doc.Descendants("country").FirstOrDefault();
+                double.TryParse(doc.Root.Element("temperature").Attribute("value").Value, out temperature);
+                iconCode = doc.Root.Element("weather").Attribute("icon").Value;
+                double.TryParse(doc.Root.Element("wind").Element("speed").Attribute("value").Value, out wind);
+                humidity = doc.Root.Element("humidity").Attribute("value").Value + "%";
+
+                if (unit == 'F')
+                {
+                    temperatureString = temperature + " F";
+                    windString = wind + " MPH";
+                }
+                else
+                {
+                    wind = wind * 3.6;
+                    temperatureString = temperature + " °C";
+                    windString = wind + " Km/h";
+                }
+
+                //Loading the icon
+                string iconUrl = "http://openweathermap.org/img/wn/" + iconCode + ".png";
+                WebClient client = new WebClient();
+                byte[] image = client.DownloadData(iconUrl);
+                MemoryStream stream = new MemoryStream(image);
+                Bitmap newBitMap = new Bitmap(stream);
+                Bitmap icon = newBitMap;
+
+                txtCond.Text = weatherDesc;
+                txtLocation.Text = location;
+                txtTemp.Text = temperatureString;
+                txtHumid.Text = humidity;
+                txtWind.Text = windString;
+                picWeather.Image = icon;
+
+                updateDatabase(temperature, location, unit);
+                txtUpdate.Text = "Last updated:" + DateTime.Now.ToString("HH:mm:ss");
+            }
+            catch (System.Net.WebException)
             {
-                units = "imperial";
-                unit = 'F';
+                notifyIcon1.Icon = SystemIcons.Application;
+                notifyIcon1.BalloonTipText = "City not found";
+                notifyIcon1.ShowBalloonTip(1000);
+                inputCity.Text = "Emmen";
             }
-            else
-            {
-                units = "metric";
-                unit = 'C';
-            }
-
-            string url = "http://api.openweathermap.org/data/2.5/weather?mode=xml&appid=ead3a55304596268baa5c68bb1afdfc6&q=" + city + "&units=" + units;
-
-            //Loading information from the API
-            XDocument doc = XDocument.Load(url);
-            weatherDesc = doc.Root.Element("weather").Attribute("value").Value;
-            location = doc.Root.Element("city").Attribute("name").Value + ", " +(string)doc.Descendants("country").FirstOrDefault();
-            double.TryParse(doc.Root.Element("temperature").Attribute("value").Value, out temperature);
-            iconCode = doc.Root.Element("weather").Attribute("icon").Value;
-            double.TryParse(doc.Root.Element("wind").Element("speed").Attribute("value").Value, out wind);
-            humidity = doc.Root.Element("humidity").Attribute("value").Value + "%";
-            
-
-            if (unit == 'F')
-            {
-                temperatureString = temperature + " F";
-                windString = wind + " MPH";
-            }
-            else
-            {
-                wind = wind * 3.6;
-                temperatureString = temperature + " °C";
-                windString = wind + " Km/h";
-            }
-
-            //Loading the icon
-            string iconUrl = "http://openweathermap.org/img/wn/" + iconCode + ".png";
-            WebClient client = new WebClient();
-            byte[] image = client.DownloadData(iconUrl);
-            MemoryStream stream = new MemoryStream(image);
-            Bitmap newBitMap = new Bitmap(stream);
-            Bitmap icon = newBitMap;
-
-            txtCond.Text = weatherDesc;
-            txtLocation.Text = location;
-            txtTemp.Text = temperatureString;
-            txtHumid.Text = humidity;
-            txtWind.Text = windString;
-            picWeather.Image = icon;
-
-            updateDatabase(temperature, location, unit);
-            txtUpdate.Text = "Last updated:" + DateTime.Now.ToString("HH:mm:ss");
         }
 
         /// <summary>
@@ -185,8 +195,8 @@ namespace NHL_Stenden_Weather
         /// <param name="seconds">Chosen interval entered by user</param>
         private void StartTime(int seconds)
         {
-
-            System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
+            timer.Stop();
+            timer.Start();
 
             timer.Tick += new EventHandler(timer_Tick);
 
@@ -200,7 +210,6 @@ namespace NHL_Stenden_Weather
             {
                 timer.Interval = 60000;
             }
-
         }
 
         //Handles the event
@@ -225,9 +234,9 @@ namespace NHL_Stenden_Weather
                 seconds = seconds * 1000;
             }
 
+            refreshApi();
             StartTime(seconds);
 
-            refreshApi();
             tabControl1.SelectedTab = tabPage1;
         }
         /// <summary>
@@ -241,6 +250,30 @@ namespace NHL_Stenden_Weather
             SqlConnection con = new SqlConnection(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\Database1.mdf;Integrated Security=True");
             con.Open();
             SqlCommand com = new SqlCommand("insert into weather(day, temperature, city, unitOfMeasure) values('" + DateTime.Now + "', '" + temp + "', '" + city + "', '" + unit + "')", con);
+
+            com.ExecuteNonQuery();
+
+            con.Close();
+        }
+
+
+        //Event for opening tab2
+        private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (tabControl1.SelectedTab == tabPage2)
+            {
+                MessageBox.Show("Welcome");
+                deleteFromDatabase();
+            }
+        }
+
+
+        //Deletes all information older than 5 days
+        private void deleteFromDatabase()
+        {
+            SqlConnection con = new SqlConnection(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\Database1.mdf;Integrated Security=True");
+            con.Open();
+            SqlCommand com = new SqlCommand("delete from weather where day < DATEADD(day, -5, GETDATE())", con);
 
             com.ExecuteNonQuery();
 
