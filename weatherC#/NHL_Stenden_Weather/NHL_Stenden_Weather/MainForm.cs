@@ -13,12 +13,14 @@ using System.IO;
 using System.Net;
 using System.ComponentModel.Design.Serialization;
 using System.Data.SqlClient;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace NHL_Stenden_Weather
 {
     public partial class MainForm : Form
     {
         private System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
+        private string cityFromDb;
 
         public MainForm()
         {
@@ -101,6 +103,7 @@ namespace NHL_Stenden_Weather
             Application.Exit();
         }
 
+
         //Method for the API
         private void refreshApi()
         {
@@ -154,6 +157,10 @@ namespace NHL_Stenden_Weather
                 {
                     temperatureString = temperature + " F";
                     windString = wind + " MPH";
+
+                    //Convertion to degrees Celsius, because that is stored in the database
+                    temperature = (temperature - 32) * 5 / 9;
+                    temperature = Math.Round(temperature, 2);
                 }
                 else
                 {
@@ -177,7 +184,9 @@ namespace NHL_Stenden_Weather
                 txtWind.Text = windString;
                 picWeather.Image = icon;
 
-                updateDatabase(temperature, location, unit);
+                cityFromDb = location;
+
+                updateDatabase(temperature, location);
                 txtUpdate.Text = "Last updated:" + DateTime.Now.ToString("HH:mm:ss");
             }
             catch (System.Net.WebException)
@@ -244,12 +253,11 @@ namespace NHL_Stenden_Weather
         /// </summary>
         /// <param name="temp">The temperature to be saved</param>
         /// <param name="city">The city where the data was measured</param>
-        /// <param name="unit">Farenheit (F) or degree celsius (C)</param>
-        private void updateDatabase(double temp, string city, char unit)
+        private void updateDatabase(double temp, string city)
         {
             SqlConnection con = new SqlConnection(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\Database1.mdf;Integrated Security=True");
             con.Open();
-            SqlCommand com = new SqlCommand("insert into weather(day, temperature, city, unitOfMeasure) values('" + DateTime.Now + "', '" + temp + "', '" + city + "', '" + unit + "')", con);
+            SqlCommand com = new SqlCommand("insert into weather(day, temperature, city) values('" + DateTime.Now + "', '" + temp + "', '" + city + "')", con);
 
             com.ExecuteNonQuery();
 
@@ -262,8 +270,9 @@ namespace NHL_Stenden_Weather
         {
             if (tabControl1.SelectedTab == tabPage2)
             {
-                MessageBox.Show("Welcome");
+               // MessageBox.Show("Welcome");
                 deleteFromDatabase();
+                selectAverageTemp(cityFromDb);
             }
         }
 
@@ -278,6 +287,49 @@ namespace NHL_Stenden_Weather
             com.ExecuteNonQuery();
 
             con.Close();
+        }
+
+        private void selectAverageTemp(string city)
+        {
+            SqlConnection con = new SqlConnection(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\Database1.mdf;Integrated Security=True");
+            
+            SqlCommand com = new SqlCommand("select day, avg(temperature) from weather where city='" + city + "' group by day", con);
+
+            //com.ExecuteNonQuery();
+            try 
+            {
+                con.Open();
+                SqlDataReader reader = com.ExecuteReader();
+
+                if (reader.HasRows)
+                {
+                    //Cleaning the chart before adding new data to it
+                    foreach (var series in chartTrending.Series)
+                    {
+                        series.Points.Clear();
+                    }
+
+                    //Loading the information
+                    while (reader.Read())
+                    {
+                        
+                        chartTrending.Series["Temperature"].Points.AddXY(reader[0].ToString(), reader[1]);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("There's no history data of the location.");
+                }
+                reader.Close();
+            }
+            catch(SqlException ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                con.Close();
+            }
         }
     }
 }
