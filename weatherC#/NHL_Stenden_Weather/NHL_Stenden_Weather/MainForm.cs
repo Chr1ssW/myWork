@@ -14,6 +14,7 @@ using System.Net;
 using System.ComponentModel.Design.Serialization;
 using System.Data.SqlClient;
 using System.Windows.Forms.DataVisualization.Charting;
+using System.CodeDom.Compiler;
 
 namespace NHL_Stenden_Weather
 {
@@ -21,6 +22,7 @@ namespace NHL_Stenden_Weather
     {
         private System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
         private string cityFromDb;
+        private char unit;
 
         public MainForm()
         {
@@ -121,7 +123,6 @@ namespace NHL_Stenden_Weather
                 string humidity;
                 string units;
                 string iconCode;
-                char unit;
 
                 city = inputCity.Text;
 
@@ -248,6 +249,7 @@ namespace NHL_Stenden_Weather
 
             tabControl1.SelectedTab = tabPage1;
         }
+
         /// <summary>
         /// Inserting data into the database
         /// </summary>
@@ -256,11 +258,13 @@ namespace NHL_Stenden_Weather
         private void updateDatabase(double temp, string city)
         {
             SqlConnection con = new SqlConnection(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\Database1.mdf;Integrated Security=True");
-            con.Open();
-            SqlCommand com = new SqlCommand("insert into weather(day, temperature, city) values('" + DateTime.Now + "', '" + temp + "', '" + city + "')", con);
-
+            con.Open(); 
+            SqlCommand com = new SqlCommand("SET DATEFORMAT dmy " +
+                                            "INSERT INTO weather(day, temperature, city) " +
+                                                        "values('" + DateTime.Now + "', '" + temp + "', '"
+                                                        + city + "')",
+                                                        con);
             com.ExecuteNonQuery();
-
             con.Close();
         }
 
@@ -270,9 +274,8 @@ namespace NHL_Stenden_Weather
         {
             if (tabControl1.SelectedTab == tabPage2)
             {
-               // MessageBox.Show("Welcome");
                 deleteFromDatabase();
-                selectAverageTemp(cityFromDb);
+                selectAverageTemp(cityFromDb, unit);
             }
         }
 
@@ -282,20 +285,23 @@ namespace NHL_Stenden_Weather
         {
             SqlConnection con = new SqlConnection(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\Database1.mdf;Integrated Security=True");
             con.Open();
-            SqlCommand com = new SqlCommand("delete from weather where day < DATEADD(day, -5, GETDATE())", con);
-
+            SqlCommand com = new SqlCommand("DELETE FROM weather " +
+                                            "WHERE day < DATEADD(day, -5, GETDATE())",
+                                            con);
             com.ExecuteNonQuery();
-
             con.Close();
         }
 
-        private void selectAverageTemp(string city)
+        private void selectAverageTemp(string city, char unit)
         {
             SqlConnection con = new SqlConnection(@"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=C:\Users\takac\OneDrive\Documents\GitHub\myWork\weatherC#\NHL_Stenden_Weather\NHL_Stenden_Weather\Database1.mdf;Integrated Security=True");
             
-            SqlCommand com = new SqlCommand("select day, avg(temperature) from weather where city='" + city + "' group by day", con);
+            SqlCommand com = new SqlCommand("SELECT day, avg(temperature) " +
+                                           "FROM weather " +
+                                           "WHERE city='" + city + "' " +
+                                           "GROUP BY day",
+                                           con);
 
-            //com.ExecuteNonQuery();
             try 
             {
                 con.Open();
@@ -312,8 +318,14 @@ namespace NHL_Stenden_Weather
                     //Loading the information
                     while (reader.Read())
                     {
-                        
-                        chartTrending.Series["Temperature"].Points.AddXY(reader[0].ToString(), reader[1]);
+                        double temp = Convert.ToDouble(reader[1]);
+
+                        if (unit == 'F')
+                        {
+                            temp = (temp * 9 / 5) + 32;
+                        }
+
+                        chartTrending.Series["Temperature"].Points.AddXY(reader[0].ToString(), temp);
                     }
                 }
                 else
